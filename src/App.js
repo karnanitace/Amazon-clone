@@ -1,26 +1,59 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Home from "./components/Home";
+import Checkout from "./components/Checkout";
+import Login from "./components/Login";
+import { connect } from "react-redux";
+import { setUser, clearUser } from "./actions/basketActions";
+import { auth } from "./firebase";
+import "./App.css";
 
-function App() {
+function App({ baskets, setUser, clearUser }) {
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((authuser) => {
+      if (authuser) {
+        // user is logged in
+        setUser(authuser);
+        // eslint-disable-next-line
+      } else {
+        // user is logged out
+        clearUser();
+        // eslint-disable-next-line
+      }
+    });
+
+    return () => {
+      // Any cleanup goes here
+      unsubscribe();
+      // eslint-disable-next-line
+    };
+    // eslint-disable-next-line
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="app">
+        <Switch>
+          <Route path="/checkout">
+            <Navbar />
+            <Checkout />
+          </Route>
+          <Route path="/login">
+            <Login />
+          </Route>
+          <Route path="/">
+            <Navbar />
+            <Home />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
-export default App;
+const mapStateToProps = (state) => ({
+  baskets: state.basket,
+});
+
+export default connect(mapStateToProps, { setUser, clearUser })(App);
